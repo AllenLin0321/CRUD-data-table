@@ -23,6 +23,7 @@
               <v-layout wrap>
                 <v-flex xs12>
                   <v-text-field
+                    autofocus
                     v-model="editedItem.name"
                     prepend-icon="person"
                     :success="!$v.editedItem.name.$invalid"
@@ -37,6 +38,8 @@
                     :success="!$v.editedItem.phone.$invalid"
                     :error="submitted && $v.editedItem.phone.$invalid"
                     label="Phone"
+                    placeholder="(02)-1234-5678"
+                    mask="(##) #### - ####"
                   ></v-text-field>
                 </v-flex>
                 <v-flex xs12>
@@ -67,7 +70,7 @@
       <template v-slot:items="props">
         <td>{{ props.item.no}}</td>
         <td class="text-xs-right">{{ props.item.name }}</td>
-        <td class="text-xs-right">{{ props.item.phone }}</td>
+        <td class="text-xs-right">{{ props.item.phone | phoneFormat}}</td>
         <td class="text-xs-right">{{ props.item.email }}</td>
         <td class="justify-center layout px-0">
           <v-icon small class="mr-2" color="orange darken-2" @click="editItem(props.item)">edit</v-icon>
@@ -75,6 +78,10 @@
         </td>
       </template>
     </v-data-table>
+    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="snackbar.timeout">
+      {{ snackbar.text }}
+      <v-btn dark flat @click="snackbar.show = false">Close</v-btn>
+    </v-snackbar>
   </div>
 </template>
 
@@ -98,6 +105,12 @@ export default {
       name: "",
       phone: null,
       email: null
+    },
+    snackbar: {
+      show: false,
+      color: null,
+      timeout: null,
+      text: null
     }
   }),
   validations: {
@@ -110,6 +123,19 @@ export default {
         }
       },
       email: { required, email }
+    }
+  },
+  filters: {
+    phoneFormat: function(value) {
+      let insertStr = (soure, start, newStr) => {
+        return soure.slice(0, start) + newStr + soure.slice(start);
+      };
+
+      let newStr = value;
+
+      newStr = insertStr(newStr, 2, ")-");
+      newStr = insertStr(newStr, 8, "-");
+      return `(${newStr}`;
     }
   },
   computed: {
@@ -135,6 +161,10 @@ export default {
       this.users = this.getInitialData;
     },
 
+    insertStr(soure, start, newStr) {
+      return soure.slice(0, start) + newStr + soure.slice(start);
+    },
+
     editItem(item) {
       this.editedIndex = this.users.indexOf(item);
       this.editedItem = Object.assign({}, item);
@@ -148,6 +178,7 @@ export default {
     },
 
     close() {
+      this.submitted = false;
       this.dialog = false;
       setTimeout(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
@@ -165,7 +196,7 @@ export default {
           index !== this.editedIndex &&
           element.name === this.editedItem.name
         ) {
-          alert("姓名不可重覆");
+          this.showSnackbar("姓名不可重覆", "error");
           isUnique = false;
         }
       });
@@ -175,15 +206,24 @@ export default {
         // Edit User Data
         if (this.editedIndex > -1) {
           Object.assign(this.users[this.editedIndex], this.editedItem);
+          this.showSnackbar("資料修改成功");
         } else {
           // It's a new User and add the serial number
           this.editedItem.no = this.users.length + 1;
 
           //Add into the array
           this.users.push(this.editedItem);
+
+          this.showSnackbar("資料新增成功");
         }
         this.close();
       }
+    },
+    showSnackbar(text, color = "success", timeout = 2000) {
+      this.snackbar.show = true;
+      this.snackbar.text = text;
+      this.snackbar.color = color;
+      this.snackbar.timeout = timeout;
     }
   }
 };

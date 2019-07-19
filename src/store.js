@@ -35,32 +35,20 @@ export default new Vuex.Store({
     initialData: [{
         no: "1",
         name: "User 1",
-        phone: "02-12345678",
+        phone: "0212345678",
         email: "aaa@gmail.com"
       },
       {
         no: "2",
         name: "User 2",
-        phone: "02-12345678",
+        phone: "0212345678",
         email: "bbb@gmail.com"
       },
       {
         no: "3",
         name: "User 3",
-        phone: "02-12345678",
+        phone: "0212345678",
         email: "ccc@gmail.com"
-      },
-      {
-        no: "4",
-        name: "User 4",
-        phone: "02-12345678",
-        email: "ddd@gmail.com"
-      },
-      {
-        no: "5",
-        name: "User 5",
-        phone: "02-12345678",
-        email: "eee@gmail.com"
       }
     ]
   },
