@@ -21,14 +21,32 @@
           <v-card-text>
             <v-container grid-list-md @keypress.enter="save">
               <v-layout wrap>
-                <v-flex xs12 sm6 md4>
-                  <v-text-field v-model="editedItem.name" label="User Name"></v-text-field>
+                <v-flex xs12>
+                  <v-text-field
+                    v-model="editedItem.name"
+                    prepend-icon="person"
+                    :success="!$v.editedItem.name.$invalid"
+                    :error="submitted && $v.editedItem.name.$invalid"
+                    label="User Name"
+                  ></v-text-field>
                 </v-flex>
-                <v-flex xs12 sm6 md4>
-                  <v-text-field v-model="editedItem.phone" label="Phone"></v-text-field>
+                <v-flex xs12>
+                  <v-text-field
+                    v-model="editedItem.phone"
+                    prepend-icon="phone"
+                    :success="!$v.editedItem.phone.$invalid"
+                    :error="submitted && $v.editedItem.phone.$invalid"
+                    label="Phone"
+                  ></v-text-field>
                 </v-flex>
-                <v-flex xs12 sm6 md4>
-                  <v-text-field v-model="editedItem.email" label="Email"></v-text-field>
+                <v-flex xs12>
+                  <v-text-field
+                    v-model="editedItem.email"
+                    :success="!$v.editedItem.email.$invalid"
+                    :error="submitted && $v.editedItem.email.$invalid"
+                    prepend-icon="email"
+                    label="Email"
+                  ></v-text-field>
                 </v-flex>
               </v-layout>
             </v-container>
@@ -61,24 +79,39 @@
 </template>
 
 <script>
+import { required, email, numeric, requiredIf } from "vuelidate/lib/validators";
+
 import { mapGetters } from "vuex";
 export default {
   data: () => ({
     // Open the dialog or not
     dialog: false,
+    submitted: false,
     users: [],
     editedIndex: -1,
     editedItem: {
       name: "",
-      phone: 0,
-      email: 0
+      phone: null,
+      email: null
     },
     defaultItem: {
       name: "",
-      phone: 0,
-      email: 0
+      phone: null,
+      email: null
     }
   }),
+  validations: {
+    editedItem: {
+      name: { required },
+      phone: {
+        required,
+        isNum(v) {
+          return !isNaN(v);
+        }
+      },
+      email: { required, email }
+    }
+  },
   computed: {
     ...mapGetters(["getHeaders", "getInitialData"]),
     formTitle() {
@@ -123,17 +156,34 @@ export default {
     },
 
     save() {
-      // Edit User Data
-      if (this.editedIndex > -1) {
-        Object.assign(this.users[this.editedIndex], this.editedItem);
-      } else {
-        // It's a new User
-        // Add the No
-        this.editedItem.no = this.users.length + 1;
-        //Add into the array
-        this.users.push(this.editedItem);
+      let isUnique = true;
+      this.submitted = true;
+
+      this.users.forEach((element, index) => {
+        if (
+          // Not the same one
+          index !== this.editedIndex &&
+          element.name === this.editedItem.name
+        ) {
+          alert("姓名不可重覆");
+          isUnique = false;
+        }
+      });
+
+      // Check Name is unique and form is valid
+      if (isUnique && !this.$v.$invalid) {
+        // Edit User Data
+        if (this.editedIndex > -1) {
+          Object.assign(this.users[this.editedIndex], this.editedItem);
+        } else {
+          // It's a new User and add the serial number
+          this.editedItem.no = this.users.length + 1;
+
+          //Add into the array
+          this.users.push(this.editedItem);
+        }
+        this.close();
       }
-      this.close();
     }
   }
 };
